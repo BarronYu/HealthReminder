@@ -1,60 +1,72 @@
-//
-//  ContentView.swift
-//  HealthReminder
-//
-//  Created by Barron Yu on 2025/8/14.
-//
-
 import SwiftUI
-import UserNotifications
 
 struct ContentView: View {
+    @State private var notificationScheduled = false
+
     var body: some View {
-        VStack {
-            Text("喝水提醒")
-                .font(.largeTitle)
+        NavigationView {
+            VStack {
+                NavigationLink(destination: SettingsView()) {
+                    Text("设置计时")
+                        .font(.largeTitle)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
                 .padding()
-            Button(action: {
-                scheduleWaterReminder()
-            }) {
-                Text("开始提醒")
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
+
+                // 请求通知权限按钮
+                Button(action: {
+                    NotificationManager.shared.requestAuthorization { granted in
+                        if granted {
+                            print("通知权限已获得")
+                        } else {
+                            print("通知权限被拒绝")
+                        }
+                    }
+                }) {
+                    Text("请求通知权限")
+                        .font(.title)
+                        .padding()
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+                .padding()
+
+
+                // 安排通知按钮
+                Button(action: {
+                    let times: [Date] = [Date().addingTimeInterval(60 * 1)] // 1分钟后
+                    NotificationManager.shared.scheduleFixedNotifications(times: times)
+                    notificationScheduled = true
+                }) {
+                    Text(notificationScheduled ? "通知已安排" : "安排通知")
+                        .font(.title)
+                        .padding()
+                        .background(Color.orange)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+                .padding()
+
+                // 取消通知按钮
+                Button(action: {
+                    NotificationManager.shared.cancelAllNotifications()
+                    notificationScheduled = false
+                    print("所有通知已取消")
+                }) {
+                    Text("取消所有通知")
+                        .font(.title)
+                        .padding()
+                        .background(Color.red)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+                .padding()
             }
+            .navigationTitle("健康提醒")
         }
     }
-    
-    func scheduleWaterReminder() {
-        let content = UNMutableNotificationContent()
-        content.title = "喝水提醒"
-        content.body = "该喝水了！"
-        
-        // 每隔一小时提醒一次
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 3600, repeats: true)
-        let request = UNNotificationRequest(identifier: "WaterReminder", content: content, trigger: trigger)
-        
-        UNUserNotificationCenter.current().add(request) { (error) in
-            if let error = error {
-                print("Error: \(error)")
-            }
-        }
-    }
-}
-
-//struct ContentView: View {
-//    var body: some View {
-//        VStack {
-//            Image(systemName: "globe")
-//                .imageScale(.large)
-//                .foregroundStyle(.tint)
-//            Text("Hello, world!")
-//        }
-//        .padding()
-//    }
-//}
-
-#Preview {
-    ContentView()
 }
